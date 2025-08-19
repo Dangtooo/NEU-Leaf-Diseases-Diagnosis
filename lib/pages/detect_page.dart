@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import 'package:permission_handler/permission_handler.dart';
 
 class DetectPage extends StatefulWidget {
   const DetectPage({super.key});
@@ -22,80 +21,41 @@ class _DetectPageState extends State<DetectPage> {
 
   var baseUrl = 'http://192.168.1.149:5000';
 
-  Future<bool> _requestGalleryPermission() async {
-    if (kIsWeb) return true;
-    if (Platform.isIOS) return true;
-
-    if (Platform.isAndroid) {
-      if (await Permission.photos.isGranted ||
-          await Permission.storage.isGranted) {
-        return true;
-      }
-
-      var status = await Permission.photos.request();
-      if (status.isGranted) return true;
-
-      status = await Permission.storage.request();
-      return status.isGranted;
-    }
-
-    return false;
-  }
-
-  Future<bool> _requestCameraPermission() async {
-    if (kIsWeb) return true;
-    if (Platform.isIOS) return true;
-
-    if (Platform.isAndroid) {
-      var status = await Permission.camera.status;
-      if (status.isGranted) return true;
-
-      status = await Permission.camera.request();
-      return status.isGranted;
-    }
-    return false;
-  }
-
+  /// Choose image from gallery
   Future<void> _pickFromGallery() async {
-    if (await _requestGalleryPermission()) {
-      final img = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 95,
-      );
-      if (img != null) {
-        setState(() {
-          _image = img;
-          _result = null;
-          _confidence = null;
-        });
-      } else {
-        debugPrint("User cancelled image selection");
-      }
+    final img = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 95,
+    );
+    if (img != null) {
+      setState(() {
+        _image = img;
+        _result = null;
+        _confidence = null;
+      });
     } else {
-      debugPrint("Gallery permission denied");
+      debugPrint("User cancelled image selection");
     }
   }
 
+  /// Take image from camera
   Future<void> _pickFromCamera() async {
-    if (await _requestCameraPermission()) {
-      final img = await _picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 95,
-      );
-      if (img != null) {
-        setState(() {
-          _image = img;
-          _result = null;
-          _confidence = null;
-        });
-      } else {
-        debugPrint("User cancelled camera");
-      }
+    final img = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 95,
+    );
+    if (img != null) {
+      setState(() {
+        _image = img;
+        _result = null;
+        _confidence = null;
+      });
     } else {
-      debugPrint("Camera permission denied");
+      debugPrint("User cancelled camera");
     }
   }
 
+  /// Send to server
   Future<void> _sendToServer() async {
     if (_image == null) return;
     setState(() {
@@ -147,16 +107,16 @@ class _DetectPageState extends State<DetectPage> {
 
   @override
   Widget build(BuildContext context) {
-    var imageWidget = _image == null
-        ? const SizedBox.shrink()
-        : (kIsWeb
-        ? Image.network(_image!.path)
-        : Image.file(
-      File(_image!.path),
-      height: 240,
-      fit: BoxFit.contain,
-    ));
-
+    Widget imageWidget;
+    if (_image == null) {
+      imageWidget = SizedBox.shrink();
+    } else {
+      if (kIsWeb) {
+        imageWidget = Image.network(_image!.path);
+      } else {
+        imageWidget = Image.file(File(_image!.path));
+      }
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('Tomato Leaf Diseases Detector')),
       body: Padding(
@@ -185,7 +145,7 @@ class _DetectPageState extends State<DetectPage> {
               icon: const Icon(Icons.cloud_upload),
               label: _loading
                   ? const Text('Processing...')
-                  : const Text('Send image'),
+                  : const Text('Diagnose'),
             ),
             const SizedBox(height: 12),
             if (_result != null)
@@ -194,7 +154,7 @@ class _DetectPageState extends State<DetectPage> {
                   leading: const Icon(Icons.local_hospital),
                   title: Text('Result: ${_result!}'),
                   subtitle: _confidence != null
-                      ? Text('Confidence: ${_confidence!}')
+                      ? Text('Confidence: ${_confidence!.toStringAsFixed(2)}')
                       : null,
                 ),
               ),
