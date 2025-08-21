@@ -9,7 +9,7 @@ import numpy as np
 
 UPLOAD_FOLDER = 'image_folder'
 main = Blueprint('main', __name__)
-model = load_model(r'Tomato_Leaf_Diseases_Model.keras')
+model = load_model(r'Tomato_Leaf_Diseases_Model_Fixed_v2.keras')
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
