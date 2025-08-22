@@ -19,7 +19,7 @@ class _DetectPageState extends State<DetectPage> {
   String? _result;
   double? _confidence;
 
-  var baseUrl = 'http://192.168.1.149:5000';
+  var baseUrl = 'http://ec2-13-250-153-141.ap-southeast-1.compute.amazonaws.com:5000';
 
   /// Choose image from gallery
   Future<void> _pickFromGallery() async {
